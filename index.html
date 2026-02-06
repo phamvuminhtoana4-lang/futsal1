@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Futsal Chiến Thuật 5v5</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  margin: 0;
+  background: #020617;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-family: Arial;
+}
+#ui {
+  position: fixed;
+  top: 10px;
+  text-align: center;
+}
+canvas {
+  background: #166534;
+  border: 4px solid #fff;
+}
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <div>⚽ FUTSAL CHIẾN THUẬT 5v5</div>
+  <div>WASD: Di chuyển | Space: Sút | E: Chuyền | Q: Đổi cầu thủ</div>
+  <div id="score">0 : 0</div>
+</div>
+
+<canvas id="game" width="400" height="640"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let scoreA = 0, scoreB = 0;
+
+const field = {
+  x: 20, y: 20,
+  w: 360, h: 600
+};
+
+// bóng
+const ball = {
+  x: 200, y: 320,
+  vx: 0, vy: 0,
+  r: 6
+};
+
+// cầu thủ
+const teamA = [];
+let selected = 0;
+
+// tạo đội hình 2-2-1
+const formation = [
+  {x:200,y:560}, // GK
+  {x:120,y:460},{x:280,y:460},
+  {x:140,y:360},{x:260,y:360}
+];
+
+formation.forEach(pos=>{
+  teamA.push({
+    x: pos.x,
+    y: pos.y,
+    r: 10,
+    speed: 2,
+    stamina: 100
+  });
+});
+
+// input
+const keys = {};
+document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+// click chọn cầu thủ
+canvas.addEventListener("click", e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  teamA.forEach((p,i)=>{
+    if (Math.hypot(mx-p.x,my-p.y) < p.r+5) selected=i;
+  });
+});
+
+// vẽ sân
+function drawField(){
+  ctx.strokeStyle="#fff";
+  ctx.lineWidth=2;
+  ctx.strokeRect(field.x,field.y,field.w,field.h);
+  ctx.beginPath();
+  ctx.arc(200,320,50,0,Math.PI*2);
+  ctx.stroke();
+
+  // cầu môn
+  ctx.strokeRect(150,20,100,10);
+  ctx.strokeRect(150,610,100,10);
+}
+
+// vẽ cầu thủ
+function drawPlayers(){
+  teamA.forEach((p,i)=>{
+    ctx.beginPath();
+    ctx.fillStyle = i===selected?"#fde047":"#3b82f6";
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fill();
+
+    // stamina
+    ctx.fillStyle="lime";
+    ctx.fillRect(p.x-10,p.y-18,p.stamina/5,3);
+  });
+}
+
+// vẽ bóng
+function drawBall(){
+  ctx.beginPath();
+  ctx.fillStyle="#fff";
+  ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);
+  ctx.fill();
+}
+
+// chuyền bóng
+function passBall(){
+  let nearest=null, dist=999;
+  teamA.forEach((p,i)=>{
+    if(i!==selected){
+      const d=Math.hypot(p.x-ball.x,p.y-ball.y);
+      if(d<dist){dist=d;nearest=p;}
+    }
+  });
+  if(nearest){
+    ball.vx=(nearest.x-ball.x)*0.15;
+    ball.vy=(nearest.y-ball.y)*0.15;
+  }
+}
+
+// update
+function update(){
+  const p=teamA[selected];
+
+  let move=false;
+  if(keys["w"]){p.y-=p.speed;move=true;}
+  if(keys["s"]){p.y+=p.speed;move=true;}
+  if(keys["a"]){p.x-=p.speed;move=true;}
+  if(keys["d"]){p.x+=p.speed;move=true;}
+
+  if(move && p.stamina>0) p.stamina-=0.1;
+
+  // giới hạn sân
+  p.x=Math.max(field.x,Math.min(field.x+field.w,p.x));
+  p.y=Math.max(field.y,Math.min(field.y+field.h,p.y));
+
+  // sút
+  if(keys[" "]){
+    const d=Math.hypot(ball.x-p.x,ball.y-p.y);
+    if(d<15){
+      ball.vx=(ball.x-p.x)*0.5;
+      ball.vy=(ball.y-p.y)*0.5;
+    }
+  }
+
+  // chuyền
+  if(keys["e"]){
+    passBall();
+    keys["e"]=false;
+  }
+
+  // đổi cầu thủ
+  if(keys["q"]){
+    selected=(selected+1)%teamA.length;
+    keys["q"]=false;
+  }
+
+  // bóng
+  ball.x+=ball.vx;
+  ball.y+=ball.vy;
+  ball.vx*=0.97;
+  ball.vy*=0.97;
+
+  // chạm bóng
+  teamA.forEach(pl=>{
+    if(Math.hypot(ball.x-pl.x,ball.y-pl.y)<pl.r+ball.r){
+      ball.x=pl.x;
+      ball.y=pl.y;
+    }
+  });
+
+  // ghi bàn
+  if(ball.y<20 && ball.x>150 && ball.x<250){
+    scoreA++;
+    reset();
+  }
+}
+
+// reset sau bàn
+function reset(){
+  ball.x=200;ball.y=320;ball.vx=ball.vy=0;
+  document.getElementById("score").innerText=`${scoreA} : ${scoreB}`;
+}
+
+// loop
+function loop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawField();
+  drawPlayers();
+  drawBall();
+  update();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
