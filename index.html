@@ -2,60 +2,32 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Futsal Mobile 5v5</title>
+<title>Futsal Mobile AI</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <style>
-body {
-  margin: 0;
-  background: #020617;
-  overflow: hidden;
-  touch-action: none;
+body{margin:0;background:#020617;overflow:hidden;touch-action:none}
+canvas{display:block;margin:auto;background:#166534}
+#ui{position:fixed;inset:0;pointer-events:none}
+.btn{
+ position:absolute;width:60px;height:60px;border-radius:50%;
+ background:rgba(255,255,255,.25);
+ color:#fff;font-size:14px;
+ display:flex;align-items:center;justify-content:center;
+ pointer-events:auto
 }
-canvas {
-  display: block;
-  margin: auto;
-  background: #166534;
+#shoot{right:20px;bottom:150px}
+#pass{right:90px;bottom:90px}
+#change{right:20px;bottom:80px}
+#joyBase{
+ position:absolute;left:20px;bottom:80px;
+ width:120px;height:120px;border-radius:50%;
+ background:rgba(255,255,255,.15);
+ pointer-events:auto
 }
-#ui {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-}
-.btn {
-  position: absolute;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.2);
-  color: white;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
-}
-#shoot { right: 20px; bottom: 140px; }
-#pass { right: 90px; bottom: 80px; }
-#switch { right: 20px; bottom: 60px; }
-
-#joyBase {
-  position: absolute;
-  left: 20px;
-  bottom: 80px;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.1);
-  pointer-events: auto;
-}
-#joyStick {
-  position: absolute;
-  left: 40px;
-  top: 40px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.4);
+#joyStick{
+ position:absolute;left:40px;top:40px;
+ width:40px;height:40px;border-radius:50%;
+ background:rgba(255,255,255,.5)
 }
 </style>
 </head>
@@ -64,129 +36,168 @@ canvas {
 <canvas id="game" width="400" height="640"></canvas>
 
 <div id="ui">
-  <div id="joyBase">
-    <div id="joyStick"></div>
-  </div>
-  <div class="btn" id="shoot">SÚT</div>
-  <div class="btn" id="pass">CHUYỀN</div>
-  <div class="btn" id="switch">ĐỔI</div>
+ <div id="joyBase"><div id="joyStick"></div></div>
+ <div class="btn" id="shoot">SÚT</div>
+ <div class="btn" id="pass">CHUYỀN</div>
+ <div class="btn" id="change">ĐỔI</div>
 </div>
 
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 
 const field={x:20,y:20,w:360,h:600};
+
+// ===== ĐỘI BẠN =====
 const team=[];
 let selected=0;
-
-// tạo đội
 [
- {x:200,y:560},{x:120,y:460},{x:280,y:460},{x:140,y:360},{x:260,y:360}
+ {x:200,y:560},{x:120,y:460},{x:280,y:460},
+ {x:140,y:360},{x:260,y:360}
 ].forEach(p=>team.push({x:p.x,y:p.y,r:10,speed:2}));
 
+// ===== ĐỘI ĐỊCH AI =====
+const enemy=[];
+[
+ {x:200,y:80},{x:120,y:180},{x:280,y:180},
+ {x:140,y:280},{x:260,y:280}
+].forEach(p=>enemy.push({
+ x:p.x,y:p.y,r:10,speed:1.5,homeX:p.x,homeY:p.y
+}));
+
+// ===== BÓNG =====
 const ball={x:200,y:320,vx:0,vy:0,r:6};
 
-// joystick
-let joy={x:0,y:0,active:false};
-const base=document.getElementById("joyBase");
-const stick=document.getElementById("joyStick");
+// ===== JOYSTICK =====
+let joy={x:0,y:0};
+const base=joyBase,stick=joyStick;
 
-base.addEventListener("touchstart",()=>joy.active=true);
-base.addEventListener("touchmove",e=>{
-  const r=base.getBoundingClientRect();
-  const t=e.touches[0];
-  let dx=t.clientX-r.left-60;
-  let dy=t.clientY-r.top-60;
-  const d=Math.hypot(dx,dy);
-  if(d>40){dx*=40/d;dy*=40/d;}
-  joy.x=dx/40; joy.y=dy/40;
-  stick.style.left=40+dx+"px";
-  stick.style.top=40+dy+"px";
-});
-base.addEventListener("touchend",()=>{
-  joy={x:0,y:0,active:false};
-  stick.style.left="40px";stick.style.top="40px";
-});
+base.ontouchmove=e=>{
+ const r=base.getBoundingClientRect();
+ const t=e.touches[0];
+ let dx=t.clientX-r.left-60;
+ let dy=t.clientY-r.top-60;
+ const d=Math.hypot(dx,dy);
+ if(d>40){dx*=40/d;dy*=40/d}
+ joy.x=dx/40; joy.y=dy/40;
+ stick.style.left=40+dx+"px";
+ stick.style.top=40+dy+"px";
+};
+base.ontouchend=()=>{
+ joy.x=joy.y=0;
+ stick.style.left="40px";
+ stick.style.top="40px";
+};
 
-// chọn cầu thủ
-canvas.addEventListener("touchstart",e=>{
-  const r=canvas.getBoundingClientRect();
-  const t=e.touches[0];
-  const mx=t.clientX-r.left,my=t.clientY-r.top;
-  team.forEach((p,i)=>{
-    if(Math.hypot(mx-p.x,my-p.y)<p.r+5)selected=i;
-  });
-});
+// ===== CHỌN CẦU THỦ =====
+canvas.ontouchstart=e=>{
+ const r=canvas.getBoundingClientRect();
+ const t=e.touches[0];
+ const mx=t.clientX-r.left,my=t.clientY-r.top;
+ team.forEach((p,i)=>{
+  if(Math.hypot(mx-p.x,my-p.y)<p.r+5)selected=i;
+ });
+};
 
-// nút
-document.getElementById("shoot").onclick=()=>{
-  const p=team[selected];
-  if(Math.hypot(ball.x-p.x,ball.y-p.y)<15){
-    ball.vx=(ball.x-p.x)*0.5;
-    ball.vy=(ball.y-p.y)*0.5;
+// ===== NÚT =====
+shoot.onclick=()=>{
+ const p=team[selected];
+ if(Math.hypot(ball.x-p.x,ball.y-p.y)<15){
+  ball.vx=(ball.x-p.x)*0.5;
+  ball.vy=(ball.y-p.y)*0.5;
+ }
+};
+
+pass.onclick=()=>{
+ let near=null,d=999;
+ team.forEach((p,i)=>{
+  if(i!==selected){
+   const di=Math.hypot(p.x-ball.x,p.y-ball.y);
+   if(di<d){d=di;near=p}
   }
+ });
+ if(near){
+  ball.vx=(near.x-ball.x)*0.25;
+  ball.vy=(near.y-ball.y)*0.25;
+ }
 };
 
-document.getElementById("pass").onclick=()=>{
-  let near=null,d=999;
-  team.forEach((p,i)=>{
-    if(i!==selected){
-      const di=Math.hypot(p.x-ball.x,p.y-ball.y);
-      if(di<d){d=di;near=p;}
-    }
-  });
-  if(near){
-    ball.vx=(near.x-ball.x)*0.2;
-    ball.vy=(near.y-ball.y)*0.2;
+change.onclick=()=>selected=(selected+1)%team.length;
+
+// ===== AI ĐỊCH =====
+function enemyAI(){
+ enemy.forEach((e,i)=>{
+  let dx=ball.x-e.x, dy=ball.y-e.y;
+  let d=Math.hypot(dx,dy);
+
+  if(d<140){
+   e.x+=dx/d*e.speed;
+   e.y+=dy/d*e.speed;
+  }else{
+   e.x+=(e.homeX-e.x)*0.02;
+   e.y+=(e.homeY-e.y)*0.02;
   }
-};
 
-document.getElementById("switch").onclick=()=>{
-  selected=(selected+1)%team.length;
-};
-
-function draw(){
-  ctx.clearRect(0,0,400,640);
-  ctx.strokeStyle="#fff";
-  ctx.strokeRect(field.x,field.y,field.w,field.h);
-
-  team.forEach((p,i)=>{
-    ctx.beginPath();
-    ctx.fillStyle=i===selected?"#fde047":"#3b82f6";
-    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fill();
-  });
-
-  ctx.beginPath();
-  ctx.fillStyle="#fff";
-  ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);
-  ctx.fill();
+  if(d<e.r+ball.r){
+   ball.x=e.x; ball.y=e.y;
+   ball.vy=3; // sút về khung bạn
+  }
+ });
 }
 
+// ===== UPDATE =====
 function update(){
-  const p=team[selected];
-  p.x+=joy.x*p.speed;
-  p.y+=joy.y*p.speed;
+ const p=team[selected];
+ p.x+=joy.x*p.speed;
+ p.y+=joy.y*p.speed;
+ p.x=Math.max(field.x,Math.min(field.x+field.w,p.x));
+ p.y=Math.max(field.y,Math.min(field.y+field.h,p.y));
 
-  p.x=Math.max(field.x,Math.min(field.x+field.w,p.x));
-  p.y=Math.max(field.y,Math.min(field.y+field.h,p.y));
+ ball.x+=ball.vx; ball.y+=ball.vy;
+ ball.vx*=0.97; ball.vy*=0.97;
 
-  ball.x+=ball.vx; ball.y+=ball.vy;
-  ball.vx*=0.97; ball.vy*=0.97;
+ team.forEach(pl=>{
+  if(Math.hypot(ball.x-pl.x,ball.y-pl.y)<pl.r+ball.r){
+   ball.x=pl.x; ball.y=pl.y;
+  }
+ });
 
-  team.forEach(pl=>{
-    if(Math.hypot(ball.x-pl.x,ball.y-pl.y)<pl.r+ball.r){
-      ball.x=pl.x; ball.y=pl.y;
-    }
-  });
+ enemyAI();
 }
 
-function loop(){
-  draw(); update();
-  requestAnimationFrame(loop);
+// ===== VẼ =====
+function draw(){
+ ctx.clearRect(0,0,400,640);
+ ctx.strokeStyle="#fff";
+ ctx.strokeRect(field.x,field.y,field.w,field.h);
+ ctx.strokeRect(150,20,100,10);
+ ctx.strokeRect(150,610,100,10);
+
+ team.forEach((p,i)=>{
+  ctx.beginPath();
+  ctx.fillStyle=i===selected?"#fde047":"#3b82f6";
+  ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+  ctx.fill();
+ });
+
+ enemy.forEach(e=>{
+  ctx.beginPath();
+  ctx.fillStyle="#ef4444";
+  ctx.arc(e.x,e.y,e.r,0,Math.PI*2);
+  ctx.fill();
+ });
+
+ ctx.beginPath();
+ ctx.fillStyle="#fff";
+ ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);
+ ctx.fill();
 }
-loop();
+
+// ===== LOOP =====
+(function loop(){
+ draw(); update();
+ requestAnimationFrame(loop);
+})();
 </script>
 </body>
 </html>
