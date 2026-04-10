@@ -2,99 +2,89 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>STICKMAN IMMORTAL: GOD TIER (244 FPS)</title>
+    <title>IMMORTAL SOUL: NO-BODY EDITION (244 FPS)</title>
     <style>
-        :root { --p: #00f2ff; --a: #bc00ff; --bg: #020205; --card: rgba(10, 10, 20, 0.95); }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; }
-        canvas { display: block; position: absolute; z-index: 1; filter: saturate(1.5) contrast(1.1); }
+        :root { --p: #00f2ff; --a: #bc00ff; --bg: #000000; --card: rgba(15, 15, 25, 0.98); }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); overflow: hidden; font-family: 'Consolas', monospace; color: white; }
+        canvas { display: block; position: absolute; z-index: 1; filter: contrast(1.2); }
 
-        /* --- GIAO DIỆN AUTH SIÊU VIP --- */
-        #auth-container {
-            position: fixed; inset: 0; z-index: 100; background: radial-gradient(circle at center, rgba(10,20,50,0.5), var(--bg));
-            display: flex; align-items: center; justify-content: center; backdrop-filter: blur(15px); transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .auth-box {
-            background: var(--card); padding: 50px; border-radius: 20px; border: 1px solid rgba(0, 242, 255, 0.3);
-            box-shadow: 0 0 50px rgba(0, 242, 255, 0.15), inset 0 0 20px rgba(0, 242, 255, 0.05);
-            width: 400px; text-align: center; position: relative;
-        }
-        .auth-box::before { content: ""; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px; background: linear-gradient(45deg, var(--p), transparent, var(--a)); z-index: -1; border-radius: 22px; opacity: 0.3; }
-        
-        h2 { font-size: 2em; letter-spacing: 8px; color: var(--p); text-shadow: 0 0 15px var(--p); margin-bottom: 30px; }
-        input {
-            width: 100%; padding: 15px; margin: 12px 0; border-radius: 8px; border: 1px solid #222;
-            background: rgba(0,0,0,0.5); color: var(--p); font-size: 16px; outline: none; transition: 0.3s;
-            box-sizing: border-box;
-        }
-        input:focus { border-color: var(--p); box-shadow: 0 0 15px rgba(0, 242, 255, 0.3); }
-        
-        .btn-glow {
-            width: 100%; padding: 15px; margin-top: 25px; border: none; border-radius: 8px;
-            background: linear-gradient(90deg, var(--p), var(--a)); color: white; font-weight: 900;
-            cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.4s;
-        }
-        .btn-glow:hover { letter-spacing: 5px; filter: brightness(1.3); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        /* --- AUTH LAYER --- */
+        #auth-layer { position: fixed; inset: 0; z-index: 100; background: var(--bg); display: flex; align-items: center; justify-content: center; }
+        .auth-card { background: var(--card); padding: 40px; border: 1px solid var(--p); border-radius: 4px; width: 400px; text-align: center; box-shadow: 0 0 40px rgba(0, 242, 255, 0.1); }
+        input { width: 100%; padding: 15px; margin: 10px 0; background: #050505; border: 1px solid #222; color: var(--p); outline: none; }
+        .btn { width: 100%; padding: 15px; background: none; border: 1px solid var(--p); color: var(--p); cursor: pointer; text-transform: uppercase; font-weight: bold; transition: 0.3s; }
+        .btn:hover { background: var(--p); color: #000; box-shadow: 0 0 20px var(--p); }
 
-        .links { margin-top: 20px; font-size: 13px; color: #666; }
-        .links span { color: var(--p); cursor: pointer; transition: 0.3s; }
-        .links span:hover { text-shadow: 0 0 5px var(--p); }
+        /* --- HUD (TOP LEFT) --- */
+        #hud { position: absolute; top: 25px; left: 25px; z-index: 50; display: none; pointer-events: none; }
+        .bar-container { width: 300px; height: 6px; background: rgba(255,255,255,0.05); margin-top: 10px; border-radius: 3px; }
+        #hp-fill { height: 100%; background: #ff0055; width: 100%; transition: 0.1s; box-shadow: 0 0 10px #ff0055; }
+        #mp-fill { height: 100%; background: #00f2ff; width: 100%; transition: 0.1s; box-shadow: 0 0 10px #00f2ff; }
 
-        /* --- UI TRONG GAME --- */
-        #ui-hud { position: absolute; top: 30px; left: 30px; z-index: 50; display: none; pointer-events: none; }
-        .status-card { border-left: 5px solid var(--p); background: linear-gradient(90deg, rgba(0,242,255,0.1), transparent); padding: 20px; }
-        .hp-outer { width: 350px; height: 12px; background: rgba(255,255,255,0.05); border-radius: 6px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.1); }
-        #hp-inner { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #ff8c00); box-shadow: 0 0 15px #ff0055; border-radius: 5px; transition: 0.2s; }
-        
-        .hidden { display: none !important; opacity: 0; }
+        /* --- MENU TAB (TRANG BỊ & 150 SKILL) --- */
+        #menu-tab { 
+            position: fixed; inset: 40px; z-index: 90; background: rgba(0,0,0,0.95); 
+            border: 1px solid #333; display: none; padding: 40px; grid-template-columns: 350px 1fr; gap: 40px;
+        }
+        .sect-title { color: var(--p); border-bottom: 1px solid var(--p); padding-bottom: 10px; margin-bottom: 20px; letter-spacing: 3px; }
+        .slot { background: #0a0a0a; border: 1px solid #222; padding: 20px; margin-bottom: 15px; }
+        .slot b { color: var(--a); }
+        .skill-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; overflow-y: auto; max-height: 80vh; padding-right: 10px; }
+        .skill-item { background: #050505; border: 1px solid #222; padding: 15px; font-size: 11px; text-align: center; position: relative; }
+        .skill-item.learned { border-color: var(--p); color: var(--p); box-shadow: inset 0 0 10px rgba(0,242,255,0.1); }
+        .skill-type { position: absolute; top: 2px; right: 5px; font-size: 8px; color: #444; }
+
+        /* --- NOTIFICATION --- */
+        #notif { position: fixed; bottom: 20px; right: 20px; z-index: 100; color: var(--p); font-size: 14px; text-align: right; }
     </style>
 </head>
 <body>
 
-<div id="auth-container">
-    <div class="auth-box" id="login-fm">
-        <h2>NHẬP ĐẠO</h2>
-        <input type="text" id="user-val" placeholder="Tên Đạo Hữu">
-        <input type="password" id="pass-val" placeholder="Mật Mã Tâm Pháp">
-        <button class="btn-glow" onclick="initImmortal()">XÁC NHẬN ĐĂNG NHẬP</button>
-        <div class="links">
-            Chưa có căn cốt? <span onclick="toggleAuth('reg')">Đăng Ký</span> | 
-            <span onclick="toggleAuth('reset')">Quên Mật Mã</span>
+<div id="auth-layer">
+    <div class="auth-card">
+        <h2 style="color: var(--p); letter-spacing: 10px;">VÔ THÂN GIỚI</h2>
+        <input type="text" id="username" placeholder="ĐẠO HIỆU...">
+        <input type="password" id="password" placeholder="TÂM PHÁP MẬT MÃ...">
+        <button class="btn" onclick="startMeditation()">BẮT ĐẦU NGỘ ĐẠO</button>
+        <div style="font-size: 10px; color: #444; margin-top: 20px;">DI CHUYỂN: WASD | MENU: TAB | TẤN CÔNG: MOUSE1</div>
+    </div>
+</div>
+
+<div id="hud">
+    <div id="hud-name" style="font-size: 24px; font-weight: bold;">NAME</div>
+    <div id="hud-sect" style="color: #666; font-size: 12px; margin-bottom: 10px;">TÔNG MÔN</div>
+    <div class="bar-container"><div id="hp-fill"></div></div>
+    <div class="bar-container"><div id="mp-fill"></div></div>
+    <div id="coords" style="margin-top: 10px; font-size: 10px; color: #333;">X: 0, Y: 0</div>
+</div>
+
+<div id="menu-tab">
+    <div id="inventory">
+        <h2 class="sect-title">TÚI ĐỒ & GIÁP</h2>
+        <div class="slot">MŨ: <b id="slot-helm">LINH QUANG MÃO</b></div>
+        <div class="slot">GIÁP: <b id="slot-armor">THIÊN LAM GIÁP</b></div>
+        <div class="slot">VŨ KHÍ: <b id="slot-weapon">THANH PHONG KIẾM</b></div>
+        <div class="slot" style="font-size: 12px; line-height: 1.8;">
+            <span style="color: #444;">CHỈ SỐ TỔNG:</span><br>
+            CÔNG LỰC: <span id="stat-atk" style="color: var(--p);">0</span><br>
+            PHÒNG NGỰ: <span id="stat-def" style="color: var(--p);">0</span><br>
+            TỐC ĐỘ: <span id="stat-spd" style="color: var(--p);">0</span>
         </div>
     </div>
-
-    <div class="auth-box hidden" id="reg-fm">
-        <h2>KHỞI TẠO</h2>
-        <input type="text" placeholder="Tài Khoản Mới">
-        <input type="password" placeholder="Mật Mã Bảo Mật">
-        <input type="password" placeholder="Xác Nhận Mật Mã">
-        <button class="btn-glow" onclick="toggleAuth('login')">TẠO TÀI KHOẢN</button>
-        <div class="links">Đã có đạo quả? <span onclick="toggleAuth('login')">Quay lại</span></div>
-    </div>
-
-    <div class="auth-box hidden" id="reset-fm">
-        <h2>KHÔI PHỤC</h2>
-        <input type="text" placeholder="Nhập Email / Tài Khoản">
-        <button class="btn-glow" onclick="toggleAuth('login')">GỬI YÊU CẦU</button>
-        <div class="links"><span onclick="toggleAuth('login')">Trở về Đăng Nhập</span></div>
+    <div id="skills">
+        <h2 class="sect-title">15 THẦN THÔNG TÔNG MÔN</h2>
+        <div class="skill-grid" id="skill-container"></div>
     </div>
 </div>
 
-<div id="ui-hud">
-    <div class="status-card">
-        <div id="hud-sect" style="color: var(--p); letter-spacing: 3px; font-size: 12px; margin-bottom: 5px;">THÁI CỔ TÔNG</div>
-        <div id="hud-name" style="font-size: 28px; font-weight: 900; color: #fff;">TOÀN PHỦI</div>
-        <div style="color: #ffd700; font-style: italic;">Cảnh giới: <span id="hud-realm">VÔ THƯỢNG ĐẾ TÔN</span></div>
-        <div class="hp-outer"><div id="hp-inner"></div></div>
-    </div>
-</div>
-
-<canvas id="gameCanvas"></canvas>
+<div id="notif"></div>
+<canvas id="game"></canvas>
 
 <script>
 /**
- * PHẦN 1: MASTER ENGINE & AUTH LOGIC
+ * PHẦN 1: CORE DATA ENGINE (150 SKILLS & ITEMS)
  */
-const canvas = document.getElementById('gameCanvas');
+const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -102,763 +92,208 @@ canvas.height = window.innerHeight;
 // TỐI ƯU 244 FPS
 const TARGET_FPS = 244;
 const FRAME_TIME = 1000 / TARGET_FPS;
-let lastFrameTime = 0;
-let isRunning = false;
+let lastFrame = 0, isRunning = false;
 
-function toggleAuth(type) {
-    document.getElementById('login-fm').classList.add('hidden');
-    document.getElementById('reg-fm').classList.add('hidden');
-    document.getElementById('reset-fm').classList.add('hidden');
-    if(type === 'login') document.getElementById('login-fm').classList.remove('hidden');
-    if(type === 'reg') document.getElementById('reg-fm').classList.remove('hidden');
-    if(type === 'reset') document.getElementById('reset-fm').classList.remove('hidden');
+// TỔNG HỢP 10 TÔNG MÔN - 150 SKILL
+const SECTS_DATA = [
+    "Lôi Đình Phái", "Hỏa Vân Tông", "Huyền Thủy Cung", "Thần Mộc Gia", 
+    "Sơn Thạch Bang", "Huyết Nguyệt Giáo", "Kiếm Tông", "Minh Giới", 
+    "Tiên Đạo", "Ma Tộc"
+];
+
+const SKILL_MASTER = {};
+SECTS_DATA.forEach(sName => {
+    SKILL_MASTER[sName] = Array.from({length: 15}, (_, i) => ({
+        id: i,
+        name: `${sName.split(' ')[0]} - Chiêu ${i+1}`,
+        type: i % 2 === 0 ? "TỰ NGỘ" : "NHIỆM VỤ",
+        learned: false,
+        manaReq: 50 + (i * 20),
+        dmgMult: 1.5 + (i * 0.5)
+    }));
+});
+
+// HỆ THỐNG TRANG BỊ
+const ITEM_DB = {
+    helms: { "LINH QUANG MÃO": { hp: 500, mp: 200 } },
+    armors: { "THIÊN LAM GIÁP": { def: 100, spd: 1.5 } },
+    weapons: { "THANH PHONG KIẾM": { atk: 300, range: 100 } }
+};
+
+let player = {
+    name: "TOÀN PHỦI",
+    sect: "Lôi Đình Phái",
+    x: 0, y: 0,
+    velX: 0, velY: 0,
+    hp: 1000, maxHp: 1000,
+    mp: 500, maxMp: 500,
+    eq: { helm: "LINH QUANG MÃO", armor: "THIÊN LAM GIÁP", weapon: "THANH PHONG KIẾM" }
+};
+
+// Khởi tạo menu skill khi bắt đầu
+function buildSkillMenu() {
+    const container = document.getElementById('skill-container');
+    container.innerHTML = SKILL_MASTER[player.sect].map(s => `
+        <div class="skill-item ${s.learned ? 'learned' : ''}">
+            <span class="skill-type">${s.type}</span>
+            ${s.name}<br>
+            <small style="color: #444">MP: ${s.manaReq}</small>
+        </div>
+    `).join('');
 }
 
-function initImmortal() {
-    const user = document.getElementById('user-val').value || "Toàn Phủi";
-    document.getElementById('hud-name').innerText = user.toUpperCase();
-    document.getElementById('auth-container').style.opacity = '0';
-    setTimeout(() => {
-        document.getElementById('auth-container').style.display = 'none';
-        document.getElementById('ui-hud').style.display = 'block';
-        isRunning = true;
-        gameLoop();
-    }, 800);
-}
+/**
+ * PHẦN 2 & 3: LOGIC XỬ LÝ 244 FPS & TỰ NGỘ SKILL
+ */
+const keys = {};
+const camera = { x: 0, y: 0 };
+const slashEffects = [];
 
-// LÕI XỬ LÝ HẠT SIÊU CẤP (VFX)
-const camera = { x: 0, y: 0, zoom: 1, shake: 0 };
-const particles = [];
+window.onkeydown = (e) => { 
+    keys[e.key.toLowerCase()] = true; 
+    if(e.key === 'Tab') {
+        e.preventDefault();
+        const m = document.getElementById('menu-tab');
+        m.style.display = m.style.display === 'grid' ? 'none' : 'grid';
+    }
+};
+window.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
 
-class SuperParticle {
-    constructor(x, y, color, speed, life, size) {
-        this.x = x; this.y = y; this.color = color;
-        this.vx = (Math.random() - 0.5) * speed;
-        this.vy = (Math.random() - 0.5) * speed;
-        this.life = life; this.maxLife = life;
-        this.size = size;
-    }
-    update() {
-        this.x += this.vx; this.y += this.vy;
-        this.life--;
-    }
-    draw() {
-        ctx.save();
-        ctx.globalAlpha = this.life / this.maxLife;
-        ctx.shadowBlur = 10; ctx.shadowColor = this.color;
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x - camera.x + canvas.width/2, this.y - camera.y + canvas.height/2, this.size, 0, Math.PI*2);
-        ctx.fill();
-        ctx.restore();
-    }
-}
-
-function gameLoop(now) {
-    if(!isRunning) return;
-    
-    // Khống chế 244 FPS
-    if (now - lastFrameTime >= FRAME_TIME) {
-        lastFrameTime = now;
-        update();
-        render();
-    }
+function startMeditation() {
+    player.name = document.getElementById('username').value.toUpperCase() || "TOÀN PHỦI";
+    document.getElementById('hud-name').innerText = player.name;
+    document.getElementById('hud-sect').innerText = player.sect.toUpperCase();
+    document.getElementById('auth-layer').style.display = 'none';
+    document.getElementById('hud').style.display = 'block';
+    buildSkillMenu();
+    isRunning = true;
     requestAnimationFrame(gameLoop);
 }
 
-function update() {
-    // Logic cập nhật sẽ nằm ở các phần tiếp theo
-    if(camera.shake > 0) camera.shake *= 0.9;
+function update(dt) {
+    if(!isRunning) return;
+
+    // Tốc độ dựa trên Giáp
+    const spd = ITEM_DB.armors[player.eq.armor].spd;
+    if(keys['w']) player.velY -= spd;
+    if(keys['s']) player.velY += spd;
+    if(keys['a']) player.velX -= spd;
+    if(keys['d']) player.velX += spd;
+
+    player.x += player.velX;
+    player.y += player.velY;
+    player.velX *= 0.92;
+    player.velY *= 0.92;
+
+    // Camera follow
+    camera.x += (player.x - camera.x) * 0.1;
+    camera.y += (player.y - camera.y) * 0.1;
+
+    // LOGIC TỰ NGỘ SKILL (Khi di chuyển đạt vận tốc nhất định)
+    if(Math.abs(player.velX) > 5 && Math.random() < 0.0005) {
+        let sectSkills = SKILL_MASTER[player.sect];
+        let available = sectSkills.filter(s => !s.learned && s.type === "TỰ NGỘ");
+        if(available.length > 0) {
+            available[0].learned = true;
+            notify(`ĐỘT PHÁ: Bạn đã tự ngộ được [${available[0].name}]!`);
+            buildSkillMenu();
+        }
+    }
+
+    // NHIỆM VỤ TÔNG MÔN (Đạt tọa độ x > 5000)
+    if(player.x > 5000 && Math.random() < 0.01) {
+        let questSkill = SKILL_MASTER[player.sect].find(s => !s.learned && s.type === "NHIỆM VỤ");
+        if(questSkill) {
+            questSkill.learned = true;
+            notify(`HOÀN THÀNH: Nhiệm vụ tông môn mở khóa [${questSkill.name}]!`);
+            buildSkillMenu();
+        }
+    }
+
+    document.getElementById('coords').innerText = `TỌA ĐỘ: X:${Math.floor(player.x)} Y:${Math.floor(player.y)}`;
 }
 
-function render() {
-    ctx.fillStyle = '#020205';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    /**
- * PHẦN 2: HỆ THỐNG XƯƠNG KHỚP & BẢN ĐỒ ĐA VÙNG
+function notify(msg) {
+    const n = document.getElementById('notif');
+    n.innerText = msg;
+    setTimeout(() => n.innerText = "", 5000);
+}/**
+ * PHẦN 4 & 5: RENDERING HIỆU ỨNG KHÔNG NHÂN VẬT
  */
+function render() {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-const WORLD_CONFIG = {
-    chunkSize: 150, // Kích thước lưới
-    biomes: [
-        { name: "LÔI ĐÌNH PHÁI", color: "#00f2ff", bg: "#020510", accent: "#bc00ff" },
-        { name: "LIỆT DIỄM TÔNG", color: "#ff4400", bg: "#100202", accent: "#ffcc00" },
-        { name: "HUYỀN THỦY CUNG", color: "#0088ff", bg: "#020810", accent: "#ffffff" },
-        { name: "MA LA GIÁO", color: "#ff0055", bg: "#0a0205", accent: "#5500ff" }
-    ]
-};
-
-// --- HỆ THỐNG XƯƠNG KHỚP NHÂN VẬT (IK SIMPLE) ---
-class StickmanGod {
-    constructor(x, y, color, name, isPlayer = false) {
-        this.x = x; this.y = y;
-        this.color = color; this.name = name;
-        this.isPlayer = isPlayer;
-        this.hp = 100; this.maxHp = 100;
-        this.vel = { x: 0, y: 0 };
-        this.acc = 0.8; // Gia tốc cực cao cho 244fps
-        this.friction = 0.92;
-        
-        // Animation States
-        this.walkCycle = 0;
-        this.lean = 0; // Độ nghiêng
-        this.targetAngle = 0;
-        this.pulse = 0; // Hiệu ứng hào quang
+    // Vẽ bụi không gian (Thế chỗ cho Map)
+    ctx.fillStyle = "#222";
+    for(let i=0; i<100; i++) {
+        let rx = (i * 500 - camera.x * 0.5) % canvas.width;
+        if(rx < 0) rx += canvas.width;
+        let ry = (i * 300 - camera.y * 0.5) % canvas.height;
+        if(ry < 0) ry += canvas.height;
+        ctx.fillRect(rx, ry, 1, 1);
     }
 
-    draw() {
-        // Rung camera khi di chuyển tốc độ cao
-        const shakeX = (Math.random() - 0.5) * camera.shake;
-        const shakeY = (Math.random() - 0.5) * camera.shake;
-        
-        const sx = this.x - camera.x + canvas.width / 2 + shakeX;
-        const sy = this.y - camera.y + canvas.height / 2 + shakeY;
+    const screenX = player.x - camera.x + canvas.width/2;
+    const screenY = player.y - camera.y + canvas.height/2;
 
-        ctx.save();
-        this.pulse = Math.sin(Date.now() * 0.005) * 10;
-        ctx.shadowBlur = 15 + this.pulse;
-        ctx.shadowColor = this.color;
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 4;
-        ctx.lineCap = "round";
-
-        // Logic Xương Khớp
-        let moving = Math.hypot(this.vel.x, this.vel.y) > 0.5;
-        if(moving) this.walkCycle += 0.25; // Tốc độ hoạt ảnh chân
-        else this.walkCycle *= 0.9;
-
-        let legSwing = Math.sin(this.walkCycle) * 15;
-        this.lean = this.vel.x * 2; // Nghiêng người khi chạy
-
-        // 1. Vẽ Thân & Đầu
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(sx + this.lean, sy - 30); // Cột sống
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(sx + this.lean * 1.5, sy - 42, 9, 0, Math.PI * 2); // Đầu
-        ctx.stroke();
-
-        // 2. Vẽ Chân (IK Cải tiến)
-        ctx.lineWidth = 5;
-        // Chân 1
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(sx - 12 + legSwing, sy + 20);
-        ctx.stroke();
-        // Chân 2
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(sx + 12 - legSwing, sy + 20);
-        ctx.stroke();
-
-        // 3. Vẽ Tay & Vũ khí (Luôn hướng về mục tiêu)
-        ctx.strokeStyle = "#fff";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(sx + this.lean * 0.5, sy - 20);
-        let armX = sx + Math.cos(this.targetAngle) * 15;
-        let armY = sy - 15 + Math.sin(this.targetAngle) * 15;
-        ctx.lineTo(armX, armY);
-        ctx.stroke();
-
-        // Vũ khí Neon (Thanh Kiếm Ánh Sáng)
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(armX, armY);
-        ctx.lineTo(armX + Math.cos(this.targetAngle) * 45, armY + Math.sin(this.targetAngle) * 45);
-        ctx.shadowBlur = 25;
-        ctx.stroke();
-
-        // Tên hiển thị (Phong cách Tu Tiên)
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = "rgba(255,255,255,0.9)";
-        ctx.font = "bold 13px 'Segoe UI'";
-        ctx.textAlign = "center";
-        ctx.fillText(this.name, sx, sy - 65);
-        
-        ctx.restore();
-    }
-
-    update() {
-        this.x += this.vel.x;
-        this.y += this.vel.y;
-        this.vel.x *= this.friction;
-        this.vel.y *= this.friction;
-        
-        // Tự động hồi phục nhẹ linh lực
-        if(this.hp < this.maxHp) this.hp += 0.01;
-    }
-}
-
-// --- HỆ THỐNG MAP VÔ TẬN & CHUYỂN VÙNG (BIOMES) ---
-function renderInfiniteWorld() {
-    const grid = WORLD_CONFIG.chunkSize;
-    const startX = Math.floor((camera.x - canvas.width) / grid) * grid;
-    const endX = Math.floor((camera.x + canvas.width) / grid) * grid;
-    const startY = Math.floor((camera.y - canvas.height) / grid) * grid;
-    const endY = Math.floor((camera.y + canvas.height) / grid) * grid;
-
-    // Xác định Vùng Đất (Biome) dựa trên tọa độ X
-    let biomeIdx = Math.floor(Math.abs(player.x / 3000)) % WORLD_CONFIG.biomes.length;
-    let biome = WORLD_CONFIG.biomes[biomeIdx];
-
-    // Hiệu ứng chuyển màu nền mượt mà
-    canvas.style.backgroundColor = biome.bg;
-    document.getElementById('hud-sect').innerText = biome.name;
-    document.getElementById('hud-sect').style.color = biome.color;
-    document.getElementById('hp-inner').style.boxShadow = `0 0 20px ${biome.color}`;
-
+    // VẼ HÀO QUANG (THAY CHO NHÂN VẬT)
+    const time = Date.now() * 0.002;
     ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,0.03)";
-    ctx.lineWidth = 1;
+    ctx.shadowBlur = 20 + Math.sin(time) * 10;
+    ctx.shadowColor = varToColor(player.sect);
+    ctx.strokeStyle = varToColor(player.sect);
+    ctx.lineWidth = 2;
+    
+    // Vòng tròn trung tâm (Linh hồn)
+    ctx.beginPath();
+    ctx.arc(screenX, screenY, 15, 0, Math.PI*2);
+    ctx.stroke();
 
-    // Vẽ lưới điện (Cyber Grid)
-    for (let x = startX; x <= endX; x += grid) {
+    // Các vòng quỹ đạo (Linh lực trang bị)
+    for(let i=0; i<3; i++) {
         ctx.beginPath();
-        ctx.moveTo(x - camera.x + canvas.width / 2, 0);
-        ctx.lineTo(x - camera.x + canvas.width / 2, canvas.height);
-        ctx.stroke();
-    }
-    for (let y = startY; y <= endY; y += grid) {
-        ctx.beginPath();
-        ctx.moveTo(0, y - camera.y + canvas.height / 2);
-        ctx.lineTo(canvas.width, y - camera.y + canvas.height / 2);
+        ctx.ellipse(screenX, screenY, 30 + i*10, 10, time + i, 0, Math.PI*2);
         ctx.stroke();
     }
     ctx.restore();
-}
 
-// KHỞI TẠO ĐỐI TƯỢNG
-const player = new StickmanGod(0, 0, "#00f2ff", "TOÀN PHỦI", true);
-const keys = {};
-
-window.onkeydown = (e) => keys[e.key.toLowerCase()] = true;
-window.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
-window.onmousemove = (e) => {
-    player.targetAngle = Math.atan2(e.clientY - canvas.height/2, e.clientX - canvas.width/2);
-};
-
-// Cập nhật hàm Update & Render của Phần 1
-function update() {
-    if(!isRunning) return;
-
-    if(keys['w'] || keys['arrowup']) player.vel.y -= player.acc;
-    if(keys['s'] || keys['arrowdown']) player.vel.y += player.acc;
-    if(keys['a'] || keys['arrowleft']) player.vel.x -= player.acc;
-    if(keys['d'] || keys['arrowright']) player.vel.x += player.acc;
-
-    player.update();
-    
-    // Camera bám sát ở 244fps cần độ mượt cực cao (lerp 0.05)
-    camera.x += (player.x - camera.x) * 0.05;
-    camera.y += (player.y - camera.y) * 0.05;
-    
-    if(camera.shake > 0) camera.shake *= 0.95;
-    
-    // UI HP
-    document.getElementById('hp-inner').style.width = (player.hp / player.maxHp * 100) + "%";
-}
-
-function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    renderInfiniteWorld();
-    player.draw();
-}
- /**
- * PHẦN 3: AI NPC, QUÁI VẬT & CƠ CHẾ CHIẾN ĐẤU CƠ BẢN
- */
-
-const entities = [];
-const ENTITY_CONFIG = {
-    maxNpcs: 30,
-    spawnDist: 1500, // Khoảng cách sinh NPC quanh player
-    detectionRange: 600,
-    attackRange: 80
-};
-
-class AIStickman extends StickmanGod {
-    constructor(x, y, color, name, sect) {
-        super(x, y, color, name, false);
-        this.sect = sect;
-        this.target = null;
-        this.state = 'WANDER'; // WANDER, CHASE, ATTACK, RETREAT
-        this.realmLevel = Math.floor(Math.random() * 5) + 1; // Cấp độ tu vi AI
-        this.isAggressive = Math.random() > 0.5;
-        this.decisionTimer = 0;
-    }
-
-    aiLogic() {
-        if (this.hp <= 0) return;
-        this.decisionTimer++;
-
-        // 1. Tìm mục tiêu (Player hoặc NPC tông môn khác)
-        if (this.decisionTimer % 60 === 0 || !this.target) {
-            let nearest = null;
-            let minDist = ENTITY_CONFIG.detectionRange;
-
-            // Kiểm tra khoảng cách với Player
-            let dToP = Math.hypot(player.x - this.x, player.y - this.y);
-            if (this.isAggressive && dToP < minDist) {
-                nearest = player;
-                minDist = dToP;
-            }
-
-            // Kiểm tra các NPC khác
-            entities.forEach(e => {
-                if (e !== this && e.hp > 0 && e.color !== this.color) {
-                    let d = Math.hypot(e.x - this.x, e.y - this.y);
-                    if (d < minDist) {
-                        nearest = e;
-                        minDist = d;
-                    }
-                }
-            });
-            this.target = nearest;
-        }
-
-        // 2. Thực thi hành động dựa trên State
-        if (this.target && this.target.hp > 0) {
-            let dist = Math.hypot(this.target.x - this.x, this.target.y - this.y);
-            this.targetAngle = Math.atan2(this.target.y - this.y, this.target.x - this.x);
-
-            if (dist > ENTITY_CONFIG.attackRange) {
-                this.state = 'CHASE';
-                this.vel.x += Math.cos(this.targetAngle) * (this.acc * 0.6);
-                this.vel.y += Math.sin(this.targetAngle) * (this.acc * 0.6);
-            } else {
-                this.state = 'ATTACK';
-                if (this.decisionTimer % 100 === 0) this.performAttack();
-            }
-        } else {
-            this.state = 'WANDER';
-            this.vel.x += (Math.random() - 0.5) * 0.5;
-            this.vel.y += (Math.random() - 0.5) * 0.5;
-        }
-    }
-
-    performAttack() {
-        // Tạo rung động nhẹ khi AI đánh
-        if (Math.hypot(player.x - this.x, player.y - this.y) < 1000) {
-            camera.shake = 5;
-        }
-        
-        // Hiệu ứng hạt khi tấn công
-        for (let i = 0; i < 5; i++) {
-            particles.push(new SuperParticle(
-                this.x + Math.cos(this.targetAngle) * 30,
-                this.y + Math.sin(this.targetAngle) * 30,
-                this.color, 5, 20, 2
-            ));
-        }
-
-        // Gây sát thương nếu mục tiêu trong tầm
-        if (this.target && Math.hypot(this.target.x - this.x, this.target.y - this.y) < ENTITY_CONFIG.attackRange + 20) {
-            this.target.hp -= 5 + this.realmLevel;
-            if (this.target.isPlayer) {
-                // Flash đỏ màn hình nếu player bị đánh (sẽ thêm ở phần 5)
-                camera.shake = 15;
-            }
-        }
-    }
-
-    update() {
-        this.aiLogic();
-        super.update();
-        // Giới hạn tốc độ cho AI
-        const maxSpd = 4 + this.realmLevel * 0.5;
-        let currSpd = Math.hypot(this.vel.x, this.vel.y);
-        if (currSpd > maxSpd) {
-            this.vel.x = (this.vel.x / currSpd) * maxSpd;
-            this.vel.y = (this.vel.y / currSpd) * maxSpd;
-        }
-    }
-}
-
-// --- QUẢN LÝ QUẦN THỂ ENTITIES ---
-function spawnNpcs() {
-    if (entities.length < ENTITY_CONFIG.maxNpcs) {
-        const angle = Math.random() * Math.PI * 2;
-        const dist = 800 + Math.random() * 700;
-        const x = player.x + Math.cos(angle) * dist;
-        const y = player.y + Math.sin(angle) * dist;
-        
-        const biome = WORLD_CONFIG.biomes[Math.floor(Math.random() * WORLD_CONFIG.biomes.length)];
-        entities.push(new AIStickman(x, y, biome.color, `Đệ Tử ${biome.name.split(' ')[0]}`, biome.name));
-    }
-}
-
-// Cập nhật hàm Render & Update từ Phần 2 để bao gồm entities
-function update() {
-    if(!isRunning) return;
-
-    // Player Control
-    if(keys['w']) player.vel.y -= player.acc;
-    if(keys['s']) player.vel.y += player.acc;
-    if(keys['a']) player.vel.x -= player.acc;
-    if(keys['d']) player.vel.x += player.acc;
-
-    player.update();
-    spawnNpcs();
-
-    // Cập nhật toàn bộ NPC & Xử lý chết
-    for (let i = entities.length - 1; i >= 0; i--) {
-        entities[i].update();
-        if (entities[i].hp <= 0) {
-            // Hiệu ứng tan biến hào quang
-            for(let j=0; j<20; j++) particles.push(new SuperParticle(entities[i].x, entities[i].y, entities[i].color, 8, 40, 3));
-            entities.splice(i, 1);
-        }
-    }
-
-    // Xử lý hạt VFX
-    for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].update();
-        if (particles[i].life <= 0) particles.splice(i, 1);
-    }
-
-    camera.x += (player.x - camera.x) * 0.05;
-    camera.y += (player.y - camera.y) * 0.05;
-    if(camera.shake > 0) camera.shake *= 0.95;
-    
-    document.getElementById('hp-inner').style.width = (player.hp / player.maxHp * 100) + "%";
-    if (player.hp <= 0) {
-        isRunning = false;
-        alert("Đạo tâm tan vỡ! Bạn đã tử nạn.");
-        location.reload();
-    }
-}
-
-function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    renderInfiniteWorld();
-    
-    // Vẽ NPC & Hạt
-    particles.forEach(p => p.draw());
-    entities.forEach(e => e.draw());
-    player.draw();
-}
- /**
- * PHẦN 4: HỆ THỐNG KỸ NĂNG (Q, E, R) & KINH NGHIỆM (EXP)
- */
-
-const SKILLS = {
-    Q: { name: "Lôi Đình Trảm", cd: 100, current: 0, color: "#00f2ff" },
-    E: { name: "Hộ Thể Kim Cang", cd: 400, current: 0, color: "#ffd700" },
-    R: { name: "Vạn Kiếm Quy Tông", cd: 1000, current: 0, color: "#bc00ff" }
-};
-
-let playerStats = {
-    exp: 0,
-    nextLevel: 100,
-    realmIdx: 0,
-    realms: ["Luyện Khí", "Trúc Cơ", "Kim Đan", "Nguyên Anh", "Hóa Thần", "Đại Thừa", "Đế Tôn"]
-};
-
-// --- LOGIC CHIÊU THỨC ---
-window.addEventListener('keydown', (e) => {
-    if (!isRunning) return;
-    const key = e.key.toUpperCase();
-    
-    if (key === 'Q' && SKILLS.Q.current === 0) useSkillQ();
-    if (key === 'E' && SKILLS.E.current === 0) useSkillE();
-    if (key === 'R' && SKILLS.R.current === 0) useSkillR();
-});
-
-function useSkillQ() {
-    SKILLS.Q.current = SKILLS.Q.cd;
-    camera.shake = 20;
-    // Chém lướt về phía trước
-    const ang = player.targetAngle;
-    player.vel.x += Math.cos(ang) * 40;
-    player.vel.y += Math.sin(ang) * 40;
-    
-    // Tạo hiệu ứng vệt sáng
-    for(let i=0; i<30; i++) {
-        particles.push(new SuperParticle(player.x, player.y, SKILLS.Q.color, 15, 30, 4));
-    }
-    checkDamage(player.x, player.y, 150, 30);
-}
-
-function useSkillE() {
-    SKILLS.E.current = SKILLS.E.cd;
-    camera.shake = 10;
-    player.hp = Math.min(player.maxHp, player.hp + 30); // Hồi máu
-    // Vòng tròn bảo hộ
-    for(let i=0; i<360; i+=10) {
-        let a = i * Math.PI / 180;
-        particles.push(new SuperParticle(player.x, player.y, SKILLS.E.color, 10, 50, 3));
-    }
-}
-
-function useSkillR() {
-    SKILLS.R.current = SKILLS.R.cd;
-    camera.shake = 50;
-    // Mưa kiếm diện rộng
-    let interval = setInterval(() => {
-        for(let i=0; i<5; i++) {
-            let rx = player.x + (Math.random()-0.5)*800;
-            let ry = player.y + (Math.random()-0.5)*800;
-            spawnVFX(rx, ry, SKILLS.R.color, 10);
-            checkDamage(rx, ry, 100, 50);
-        }
-    }, 50);
-    setTimeout(() => clearInterval(interval), 1000);
-}
-
-function checkDamage(x, y, radius, dmg) {
-    entities.forEach(e => {
-        let d = Math.hypot(e.x - x, e.y - y);
-        if (d < radius) {
-            e.hp -= dmg;
-            playerStats.exp += 10; // Nhận EXP khi gây dame
-            if (playerStats.exp >= playerStats.nextLevel) levelUp();
-        }
+    // Vẽ vệt chém kỹ năng (Slash VFX)
+    slashEffects.forEach((s, i) => {
+        s.life--;
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = s.life / 2;
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, 100, s.angle - 0.5, s.angle + 0.5);
+        ctx.stroke();
+        if(s.life <= 0) slashEffects.splice(i, 1);
     });
 }
 
-function levelUp() {
-    playerStats.exp = 0;
-    playerStats.nextLevel *= 1.5;
-    playerStats.realmIdx = Math.min(playerStats.realmIdx + 1, playerStats.realms.length - 1);
-    player.maxHp += 50;
-    player.hp = player.maxHp;
-    document.getElementById('hud-realm').innerText = playerStats.realms[playerStats.realmIdx].toUpperCase();
-    
-    // Hiệu ứng bùng nổ khi đột phá
-    camera.shake = 100;
-    spawnVFX(player.x, player.y, "#ffffff", 100);
-}
-
-// Cập nhật hàm update để xử lý Cooldown
-function update() {
-    if(!isRunning) return;
-
-    // Player Movement
-    if(keys['w']) player.vel.y -= player.acc;
-    if(keys['s']) player.vel.y += player.acc;
-    if(keys['a']) player.vel.x -= player.acc;
-    if(keys['d']) player.vel.x += player.acc;
-
-    player.update();
-    spawnNpcs();
-
-    // Xử lý Cooldown kỹ năng
-    for(let k in SKILLS) {
-        if(SKILLS[k].current > 0) SKILLS[k].current--;
-    }
-
-    // NPC & VFX Update
-    for (let i = entities.length - 1; i >= 0; i--) {
-        entities[i].update();
-        if (entities[i].hp <= 0) {
-            spawnVFX(entities[i].x, entities[i].y, entities[i].color, 20);
-            entities.splice(i, 1);
-            playerStats.exp += 50; 
-            if (playerStats.exp >= playerStats.nextLevel) levelUp();
-        }
-    }
-
-    for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].update();
-        if (particles[i].life <= 0) particles.splice(i, 1);
-    }
-
-    // Camera follow
-    camera.x += (player.x - camera.x) * 0.05;
-    camera.y += (player.y - camera.y) * 0.05;
-    if(camera.shake > 0) camera.shake *= 0.95;
-    
-    // UI HUD
-    document.getElementById('hp-inner').style.width = (player.hp / player.maxHp * 100) + "%";
-}
-
-// Ghi đè hàm Render để vẽ thêm vòng CD kỹ năng
-function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    renderInfiniteWorld();
-    
-    particles.forEach(p => p.draw());
-    entities.forEach(e => e.draw());
-    player.draw();
-
-    // Vẽ giao diện Cooldown Skills (Góc dưới màn hình)
-    const startX = canvas.width / 2 - 100;
-    const startY = canvas.height - 80;
-    ['Q', 'E', 'R'].forEach((key, i) => {
-        const s = SKILLS[key];
-        const x = startX + i * 80;
-        ctx.fillStyle = "rgba(0,0,0,0.5)";
-        ctx.fillRect(x, startY, 60, 60);
-        ctx.strokeStyle = s.current > 0 ? "#555" : s.color;
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x, startY, 60, 60);
-        
-        ctx.fillStyle = "white";
-        ctx.font = "bold 20px Arial";
-        ctx.fillText(key, x + 22, startY + 38);
-        
-        if(s.current > 0) {
-            ctx.fillStyle = "rgba(0,0,0,0.6)";
-            let h = (s.current / s.cd) * 60;
-            ctx.fillRect(x, startY + 60 - h, 60, h);
-        }
-    });
-}
- /**
- * PHẦN 5: BOSS HỆ THỐNG, LƯU DỮ LIỆU & HOÀN TẤT
- */
-
-// --- 1. HỆ THỐNG BOSS TÔNG MÔN ---
-class WorldBoss extends AIStickman {
-    constructor(x, y) {
-        super(x, y, "#ffffff", "THẦN MA ĐẠI ĐẾ", "MA TỘC");
-        this.maxHp = 5000;
-        this.hp = 5000;
-        this.size = 50; // Boss to gấp đôi
-        this.realmLevel = 10;
-        this.isBoss = true;
-    }
-
-    draw() {
-        // Hiệu ứng hào quang đen tím đặc biệt cho Boss
-        ctx.save();
-        ctx.shadowBlur = 50; ctx.shadowColor = "#bc00ff";
-        super.draw();
-        ctx.restore();
-    }
-
-    performAttack() {
-        // Boss có kỹ năng nổ diện rộng
-        camera.shake = 40;
-        spawnVFX(this.x, this.y, "#bc00ff", 100);
-        checkDamage(this.x, this.y, 400, 40); // Sát thương cực lớn
-    }
-}
-
-let bossTimer = 0;
-function manageBoss() {
-    bossTimer++;
-    if (bossTimer % 5000 === 0) { // Cứ khoảng 20-30s sinh 1 boss ở 244fps
-        const x = player.x + (Math.random() - 0.5) * 1000;
-        const y = player.y + (Math.random() - 0.5) * 1000;
-        entities.push(new WorldBoss(x, y));
-        gameLog("CẢNH BÁO: THẦN MA ĐẠI ĐẾ ĐÃ XUẤT THẾ!");
-    }
-}
-
-// --- 2. HỆ THỐNG LƯU TRỮ (SAVE & LOAD) ---
-function saveGameData() {
-    const data = {
-        name: player.name,
-        exp: playerStats.exp,
-        realm: playerStats.realmIdx,
-        maxHp: player.maxHp,
-        lastSave: Date.now()
+function varToColor(sect) {
+    const colors = {
+        "Lôi Đình Phái": "#00f2ff", "Hỏa Vân Tông": "#ff4400", "Huyền Thủy Cung": "#0044ff",
+        "Thần Mộc Gia": "#00ff44", "Sơn Thạch Bang": "#884400", "Huyết Nguyệt Giáo": "#ff0044",
+        "Kiếm Tông": "#ffffff", "Minh Giới": "#440088", "Tiên Đạo": "#ffff00", "Ma Tộc": "#bc00ff"
     };
-    localStorage.setItem(`stickman_save_${player.name}`, JSON.stringify(data));
-    console.log("Đã lưu tiến trình tu tiên...");
+    return colors[sect] || "#fff";
 }
 
-function loadGameData(username) {
-    const saved = localStorage.getItem(`stickman_save_${username}`);
-    if (saved) {
-        const data = JSON.parse(saved);
-        playerStats.exp = data.exp;
-        playerStats.realmIdx = data.realm;
-        player.maxHp = data.maxHp;
-        player.hp = data.maxHp;
-        document.getElementById('hud-realm').innerText = playerStats.realms[playerStats.realmIdx].toUpperCase();
-        gameLog("Chào mừng trở lại, đạo hữu!");
-    }
-}
-
-// --- 3. HOÀN THIỆN HỆ THỐNG AUTH (LOGIN/RESET) ---
-function handleResetPassword() {
-    alert("Một mật mã tâm pháp mới đã được gửi về hòm thư linh hồn của bạn!");
-    toggleAuth('login');
-}
-
-// Cập nhật hàm startGame từ Phần 1 để tích hợp Load Data
-function initImmortal() {
-    const user = document.getElementById('user-val').value || "Toàn Phủi";
-    player.name = user.toUpperCase();
-    document.getElementById('hud-name').innerText = player.name;
-    
-    // Tải dữ liệu cũ nếu có
-    loadGameData(user);
-
-    document.getElementById('auth-container').style.opacity = '0';
-    setTimeout(() => {
-        document.getElementById('auth-container').style.display = 'none';
-        document.getElementById('ui-hud').style.display = 'block';
-        isRunning = true;
-        
-        // Tự động lưu sau mỗi 30 giây
-        setInterval(saveGameData, 30000);
-        gameLoop();
-    }, 800);
-}
-
-// --- 4. HÀM UPDATE CUỐI CÙNG (TỔNG HỢP) ---
-function update() {
+window.onmousedown = (e) => {
     if(!isRunning) return;
+    const angle = Math.atan2(e.clientY - canvas.height/2, e.clientX - canvas.width/2);
+    slashEffects.push({ angle: angle, life: 30, color: varToColor(player.sect) });
+};
 
-    // Movement
-    if(keys['w']) player.vel.y -= player.acc;
-    if(keys['s']) player.vel.y += player.acc;
-    if(keys['a']) player.vel.x -= player.acc;
-    if(keys['d']) player.vel.x += player.acc;
-
-    player.update();
-    spawnNpcs();
-    manageBoss();
-
-    // Cooldown
-    for(let k in SKILLS) if(SKILLS[k].current > 0) SKILLS[k].current--;
-
-    // Entities & VFX
-    for (let i = entities.length - 1; i >= 0; i--) {
-        entities[i].update();
-        if (entities[i].hp <= 0) {
-            spawnVFX(entities[i].x, entities[i].y, entities[i].color, 30);
-            if(entities[i].isBoss) {
-                playerStats.exp += 5000;
-                gameLog("CHÚC MỪNG: BẠN ĐÃ TIÊU DIỆT BOSS THẾ GIỚI!");
-            }
-            entities.splice(i, 1);
-            playerStats.exp += 50; 
-            if (playerStats.exp >= playerStats.nextLevel) levelUp();
-        }
+function gameLoop(now) {
+    if(!isRunning) return;
+    if(now - lastFrame >= FRAME_TIME) {
+        update();
+        render();
+        lastFrame = now;
     }
-
-    for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].update();
-        if (particles[i].life <= 0) particles.splice(i, 1);
-    }
-
-    // Camera 244fps mượt mà
-    camera.x += (player.x - camera.x) * 0.05;
-    camera.y += (player.y - camera.y) * 0.05;
-    if(camera.shake > 0) camera.shake *= 0.95;
-    
-    // HUD Sync
-    document.getElementById('hp-inner').style.width = (player.hp / player.maxHp * 100) + "%";
+    requestAnimationFrame(gameLoop);
 }
-
-// Game Log Helper
-function gameLog(msg) {
-    console.log(`%c[THIÊN ĐẠO]: ${msg}`, "color: #00f2ff; font-weight: bold;");
-}
-
-// Chạy khởi tạo Auth cho Reset Button
-document.querySelector('#reset-fm button').onclick = handleResetPassword;
-}
-
-// Resize xử lý
-window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
 </script>
 </body>
 </html>
